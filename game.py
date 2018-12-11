@@ -1,6 +1,8 @@
 
 import arcade
 import os
+import time
+import threading
 
 DEFAULT_GAME_TITLE = "The Adventures of Joey"
 DEFAULT_MAIN_WINDOW_WIDTH = 1200
@@ -9,6 +11,9 @@ DEFAULT_GAME_BACKGROUND_COLOR = arcade.color.BABY_BLUE
 
 MAIN_CHARACTER = "graphics/main_character.png"
 CHARACTER_SCALING = 0.5
+
+JUMP_HEIGHT = 100
+JUMP_RESOLUTION = 10  # Divisor (The higher the number, the smoother the jump animation)
 
 class Game(arcade.Window):
     """
@@ -26,16 +31,9 @@ class Game(arcade.Window):
         :param title:
         :param background_color:  Named arg is provided as an option for the user to change the main background color
         """
-
-        # The following is to setup the main game window
-        self.main_window_width = width
-        self.main_window_height = height
-        self.main_window_title = title
-
         # Call parent class constructor to ensure parent is initialized
         super().__init__(width, height, title)
         arcade.set_background_color(background_color)
-        self.background_image = None
 
         # Ensure we are in the directory t hat contains this file.  If the folder hierarchy is setup correctly,
         # the image/graphics folder that contains all of the images necessary to construct the sprite and other game
@@ -46,21 +44,46 @@ class Game(arcade.Window):
         os.chdir(_this_file)
 
         # Create the main character
-        self.main_character = arcade.Sprite(MAIN_CHARACTER, CHARACTER_SCALING)
-        self.main_character_center_posx = width
-        self.main_character_center_posy = 500
+        self.main_spr = arcade.Sprite(MAIN_CHARACTER, CHARACTER_SCALING)
+        self.main_spr.center_x = 200
+        self.main_spr.center_y = 300
 
         # Create an empty sprite list and add the character(s) to the list
         self.sprites_list = arcade.SpriteList()
-        self.sprites_list.append(self.main_character)
+        self.sprites_list.append(self.main_spr)
 
         # Setup for other game meta data
         self.score = 0
 
-    def onDraw(self):
-        self._drawMainWindow()
+    def on_draw(self):
         arcade.start_render()
         self.sprites_list.draw()
+
+    def _timer(self, seconds):
+        time.sleep(seconds)
+
+    def _jump(self):
+        """
+        Provide a simple animation for the character jumping
+        :return:
+        """
+        for i in range(int(JUMP_HEIGHT/JUMP_RESOLUTION)):  # Jump up
+            print(i)
+            self.main_spr.center_y += JUMP_RESOLUTION
+            time.sleep(0.5/JUMP_RESOLUTION)
+        #for i in range(int(JUMP_HEIGHT/JUMP_RESOLUTION)):  # Come back down
+        #    self.main_spr.center_y -= JUMP_RESOLUTION
+        #    time.sleep(1/JUMP_RESOLUTION)
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.W or key == arcade.key.UP:  # Up
+            self._jump()
+        elif key == arcade.key.S or key == arcade.key.DOWN:  # Down
+            self.main_spr.center_y -= 50
+        elif key == arcade.key.D or key == arcade.key.RIGHT:  # Right
+            self.main_spr.center_x += 200
+        elif key == arcade.key.A or key == arcade.key.LEFT:  # Left
+            self.main_spr.center_x -= 200
 
     def start(self):
         arcade.run()
